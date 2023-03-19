@@ -1,1 +1,1 @@
-# SamrtHome
+# SmartHome

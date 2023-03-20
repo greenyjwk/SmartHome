@@ -33,7 +33,8 @@ void setup() {
 
 long RangeInInches;
 long RangeInCentimeters;  // two measurements should keep an interval
-long temperatureArray[10], soundArray[10], lightArray[10], distanceArray[10];
+float temperatureArray[10], soundArray[10], lightArray[10], distanceArray[10];
+int passiveOutOfLevel[2] = {0, 0};
 float initStartTime = millis();
 int intialCheck = 0;
 
@@ -55,13 +56,17 @@ void loop() {
     float initDatCollection[4];
     // initial_collect(initStartTime);
     float a, b, c, d;
-    float distanceArray[10], temperatureArray[10], lightArray[10], soundArray[10];
+    // float distanceArray[10];
+    // float temperatureArray[10];
+    // float lightArray[10]; 
+    // float soundArray[10];
+    
     initStartTime = millis();
     int count = 0;
     while(millis() - initStartTime < 5000){
       
-      temperatureArray[count] = read_Temperature(TEMP_SENSOR);
       distanceArray[count] = read_Ultrasonic();
+      temperatureArray[count] = read_Temperature(TEMP_SENSOR);
       lightArray[count] = read_Light(LIGHT);
       soundArray[count] = read_sound(SOUND);
       
@@ -72,6 +77,7 @@ void loop() {
       Serial.println(temperatureArray[count]);
       Serial.println(lightArray[count]);
       Serial.println(soundArray[count]);
+      Serial.println("-----Finished----");
   
       delay(500);
       count++;
@@ -82,11 +88,12 @@ void loop() {
     LightAvg = average(lightArray);
     SoundAvg = average(soundArray);
 
-    Serial.println("Final Average: ");
+    Serial.println("Final Average:------- ");
     Serial.println(DistanceAvg);
     Serial.println(TemperatureAvg);
     Serial.println(LightAvg);
     Serial.println(SoundAvg);
+    delay(2000);
 
 
     // bool rangeBoundCheck = average();
@@ -169,12 +176,14 @@ void loop() {
   }
 
 
-
-  // currentMode = 1;
-
   if(currentMode == 0){   // passive mode
-
-    bool* intervalsCheck = passiveModeMonitor();
+    int colorR = 255;
+    int colorG = 255;
+    int colorB = 255;
+    lcd.begin(16, 2);
+    lcd.setRGB(colorR, colorG, colorB);
+    
+    passiveModeMonitor();
     
     lcd.println(currentPassiveTemperature);
     delay(1000);
@@ -188,9 +197,44 @@ void loop() {
     delay(1000);
     lcd.clear();
 
+    
+
+    Serial.println("Alert Check----------");
+    Serial.println(passiveOutOfLevel[0]);
+    Serial.println(passiveOutOfLevel[1]);
+
+
+    if(passiveOutOfLevel[0] == 1){  // alert light
+      int colorR = 255;
+      int colorG = 0;
+      int colorB = 0;
+      lcd.begin(16, 2);
+      lcd.setRGB(colorR, colorG, colorB);
+
+      lcd.println("Temperature Alert");
+      lcd.print(currentPassiveTemperature);
+      delay(750);
+      lcd.clear();
+      passiveOutOfLevel[0] = 0;
+    }
+
+    if(passiveOutOfLevel[1] == 1){ //alert sound
+      int colorR = 255;
+      int colorG = 0;
+      int colorB = 0;
+      lcd.begin(16, 2);
+      lcd.setRGB(colorR, colorG, colorB);
+
+      lcd.println("Sound Alert");
+      lcd.print(currentPassiveSound);
+      delay(750);
+      lcd.clear();
+      passiveOutOfLevel[1] = 0;
+    }
+
     // delay(2000);
 
-  }else{                  // active mode
+  }else{                  // active monitoring
 
     int colorR = 255;
     int colorG = 0;
@@ -284,40 +328,23 @@ void loop() {
 
 
 
-bool* passiveModeMonitor(){
+void passiveModeMonitor(){
   currentPassiveTemperature = read_Temperature(TEMP_SENSOR);
   currentPassiveSound = read_sound(SOUND);
   currentPassiveLight = read_Light(LIGHT);  
   delay(2000);
 
 
+  if(currentPassiveTemperature > 35.0 || currentPassiveTemperature < 10.0){passiveOutOfLevel[0] = 1;}
+  if(currentPassiveSound > 400 ){passiveOutOfLevel[1] = 1;}
+
   float SoundInterval = (currentPassiveSound - DistanceAvg);
   float TemperatureInterval = (currentPassiveTemperature - TemperatureAvg);
   float LightInterval = (currentPassiveLight - LightAvg);
 
-  bool intervals[3];
-
-  //check
-
-  // if(SoundInterval > 50){
-  //   intervals[0] = true;
-  // }else{
-  //   intervals[0] = false;    
-  // }
-
-  // if(TemperatureInterval > 10){
-  //   intervals[1] = true;
-  // }else{
-  //   intervals[1] = false;
-  // }
-
-  // if(LightInterval > 50){
-  //   intervals[2] = true;
-  // }else{
-  //   intervals[2] = false;
-  // }
-
-  return (bool*) &intervals;
+  Serial.println("Before passing!!!!");
+  Serial.println(passiveOutOfLevel[0]);
+  Serial.println(passiveOutOfLevel[1]);
 }
 
 
@@ -332,7 +359,7 @@ bool* activeModeMonitor(){
   float TemperatureInterval = (currentTemperature - TemperatureAvg);
   float DistanceInterval = (currentUltrasonic - DistanceAvg);
   float LightInterval = (currentLight - LightAvg);
-
+  
   bool intervals[3];
 
   //check
@@ -362,10 +389,9 @@ bool* activeModeMonitor(){
 
 
 float average(float dataStream[]){
-  float sum = 0 ;
-  for(int i = 0; i < sizeof(dataStream); i++) {sum += dataStream[i];}
-  float average = sum/(sizeof(dataStream));
-  return average;
+  long sum = 0L;
+  for(int i = 0; i < 10; i++) {sum += dataStream[i];}
+  return  ((float) sum) / 10;
 }
 
 
@@ -395,7 +421,7 @@ bool lightArrangeCheck(float LightAvg){
 
 bool SoundArrangeCheck(float SoundAvg){
   bool arrangeCheck = true;
-  if( SoundAvg <= 10 || SoundAvg >=7000 ){
+  if( SoundAvg <= 10 || SoundAvg >=15000 ){
     arrangeCheck = false;
   }
   return arrangeCheck;
@@ -430,11 +456,22 @@ float read_Light(int pin) {
 
 
 // read_sound
-float read_sound(int pin) {
-  int soundValue = 0;                 //create variable to store many different readings
-  for (int i = 0; i < 32; i++)        //create a for loop to read
-  { soundValue += analogRead(pin); }  //read the sound sensor
-  // soundValue >>= 5;                   //bitshift operation
+long read_sound(int pin) {
+  // int soundValue = 0;                 //create variable to store many different readings
+  // for (int i = 0; i < 32; i++)        //create a for loop to read
+  // { soundValue += analogRead(pin); }  //read the sound sensor
+  // // soundValue >>= 5;                   //bitshift operation
+  // return soundValue;
+
+
+  long soundValue = 0;
+  for(int i=0; i<32; i++){
+    soundValue += analogRead(pin);
+  }
+  soundValue >>= 5;
+
+  // Serial.println(soundValue);
+  delay(10);
   return soundValue;
 }
 

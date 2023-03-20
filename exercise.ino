@@ -10,6 +10,8 @@
 #define LIGHT (A3)
 #define RED_LED (3)
 #define BUZZER_PIN (5)            /* sig pin of the buzzer */
+#define TouchPin (4)
+
 
 rgb_lcd lcd;
 Ultrasonic ultrasonic(2);
@@ -31,6 +33,8 @@ void setup() {
   pinMode(LIGHT, INPUT);        // Light: Configure pin A3 as an INPUT
   pinMode(RED_LED, OUTPUT);
   pinMode(BUZZER_PIN, OUTPUT);
+  pinMode(TouchPin, INPUT);
+
   Serial.begin(9600);
 }
 
@@ -46,15 +50,13 @@ float DistanceAvg;
 float TemperatureAvg;
 float LightAvg;
 float SoundAvg;
-
 float currentPassiveTemperature;
 float currentPassiveSound;
 float currentPassiveLight;
 
-
-
 void loop() { 
   
+
   if (intialCheck == 0) {
     Serial.println("This is initial step");
     float initDatCollection[4];
@@ -179,9 +181,41 @@ void loop() {
     }
   }
 
-  currentMode = 1;
 
 
+
+    
+/////////// Changing Mode ///////////
+  int startTime = millis();
+  if(currentMode == 0){ //passive Mode
+    startTime = millis();
+    while(digitalRead(TouchPin) == 0){
+      Serial.println("It is Passive monitoring now, Sensor is being pressed");
+      int interval = millis() - startTime;
+      if(interval > 3000){
+        Serial.println("It's time to change the mode"); // prints time since program started
+        currentMode = 1; // Changing to active mode
+        break;
+      }
+    }
+  }else if(currentMode == 1){
+    startTime = millis();
+    while(digitalRead(TouchPin) == 0){
+      Serial.println("It is Active monitoring now, Sensor is being pressed");
+      int interval = millis() - startTime;
+      if(interval > 2000){
+        Serial.println("It's time to change the mode"); // prints time since program started
+        currentMode = 0; // Changing to passive mode
+        break;
+      }
+    }
+  }
+/////////// Changing Mode ///////////
+
+
+
+
+  
   if(currentMode == 0){   // passive monitoring
     int colorR = 255;
     int colorG = 255;
@@ -270,7 +304,6 @@ void loop() {
       lcd.println("Intrustion!");
       lcd.print("Temperature");
       
-
       // Red LED Light  
       digitalWrite(RED_LED, HIGH);  // Turn the pin ON / Set it HIGH = 1. 
       delay(500);                  // Wait for 1 second = 1000 milliseconds.
@@ -304,57 +337,61 @@ void loop() {
   }
 
   
+
+
+
+
+
   // /////////////////////////////////////////////////
-  //   int startTime = millis();
-  //   if(currentMode == 0){ //passive Mode
-  //     int startTime = 0;
+    // int startTime = millis();
+    // if(currentMode == 0){ //passive Mode
+    //   int startTime = 0;
+    //   int touchSensorDetection = digitalRead(7);
+    //   while(touchSensorDetection == 1){
+    //     Serial.println("Sensor is being pressed");
+    //     int currentTime = millis();
+    //     int interval = currentTime - startTime;
+    //     if(interval > 3000){
+    //       Serial.println("It's time to change the mode"); // prints time since program started
+    //       // Vibration Motor
+    //       digitalWrite(motorPin, HIGH); //vibrate
+    //       delay(1500);  // delay one second
+    //       digitalWrite(motorPin, LOW);  //stop vibrating
+    //       delay(1000); //wait 50 seconds.
+    //       currentMode = 1; // Changing to active mode
+    //       break;
+    //     }
+    //   }
+    //   currentMode = 1;  // Changing the mode
 
-  //     int touchSensorDetection = digitalRead(7);
-  //     while(touchSensorDetection == 1){
-  //       Serial.println("Sensor is being pressed");
-  //       int currentTime = millis();
-  //       int interval = currentTime - startTime;
-  //       if(interval > 3000){
-  //         Serial.println("It's time to change the mode"); // prints time since program started
-  //         // Vibration Motor
-  //         digitalWrite(motorPin, HIGH); //vibrate
-  //         delay(1500);  // delay one second
-  //         digitalWrite(motorPin, LOW);  //stop vibrating
-  //         delay(1000); //wait 50 seconds.
-  //         currentMode = 1; // Changing to active mode
-  //         break;
-  //       }
-  //     }
-  //     currentMode = 1;  // Changing the mode
+    // }else if(currentMode == 1){
+    //   int touchSensorDetection = digitalRead(7);
+    //   Serial.println(touchSensorDetection);
 
-  //   }else if(currentMode == 1){
-  //     int touchSensorDetection = digitalRead(7);
-  //     Serial.println(touchSensorDetection);
+    //   while(touchSensorDetection == 1){
+    //     Serial.println("Sensor is being pressed");
+    //     int currentTime = millis();
+    //     int interval = currentTime - startTime;
+    //     if(interval > 2000){
+    //       Serial.println("It's time to change the mode"); // prints time since program started
 
-  //     while(touchSensorDetection == 1){
-  //       Serial.println("Sensor is being pressed");
-  //       int currentTime = millis();
-  //       int interval = currentTime - startTime;
-  //       if(interval > 2000){
-  //         Serial.println("It's time to change the mode"); // prints time since program started
+    //       digitalWrite(motorPin, HIGH); //vibrate
+    //       delay(500);  // delay one second
 
-  //         digitalWrite(motorPin, HIGH); //vibrate
-  //         delay(500);  // delay one second
+    //       digitalWrite(motorPin, LOW);  //stop vibrating
+    //       delay(500); //wait 50 seconds.
 
-  //         digitalWrite(motorPin, LOW);  //stop vibrating
-  //         delay(500); //wait 50 seconds.
+    //       digitalWrite(motorPin, HIGH); //vibrate
+    //       delay(500);  // delay one second
 
-  //         digitalWrite(motorPin, HIGH); //vibrate
-  //         delay(500);  // delay one second
+    //       digitalWrite(motorPin, LOW);  //stop vibrating
+    //       delay(500); //wait 50 seconds.
 
-  //         digitalWrite(motorPin, LOW);  //stop vibrating
-  //         delay(500); //wait 50 seconds.
-
-  //         currentMode = 0; // Changing to passive mode
-  //         break;
-  //       }
-  //     }
-  //   }
+    //       currentMode = 0; // Changing to passive mode
+    //       break;
+    //     }
+    //   }
+    // }
   // /////////////////////////////////////////////////
 }
 
@@ -368,7 +405,7 @@ void passiveModeMonitor(){
 
 
   if(currentPassiveTemperature > 35.0 || currentPassiveTemperature < 10.0){passiveOutOfLevel[0] = 1;}
-  if(currentPassiveSound > 400 ){passiveOutOfLevel[1] = 1;}
+  if(currentPassiveSound > 150 ){passiveOutOfLevel[1] = 1;}
 
   float SoundInterval = (currentPassiveSound - DistanceAvg);
   float TemperatureInterval = (currentPassiveTemperature - TemperatureAvg);

@@ -156,24 +156,28 @@ void loop() {
       if(check[0] == true){
         lcd.println("Distance: ");
         lcd.print(DistanceAvg);
+        delay(1000);
         lcd.clear();
       }
 
       if(check[1] == true){
         lcd.println("Temperature: ");
         lcd.print(TemperatureAvg);
+        delay(1000);
         lcd.clear();
       }
 
       if(check[2] == true){
         lcd.println("Light: ");
         lcd.print(LightAvg);
+        delay(1000);
         lcd.clear();
       }
 
       if(check[3] == true){
         lcd.println("Sound: ");
         lcd.print(SoundAvg);
+        delay(1000);
         lcd.clear();
       }
       
@@ -405,15 +409,7 @@ void passiveModeMonitor(){
 
 
   if(currentPassiveTemperature > 35.0 || currentPassiveTemperature < 10.0){passiveOutOfLevel[0] = 1;}
-  if(currentPassiveSound > 150 ){passiveOutOfLevel[1] = 1;}
-
-  float SoundInterval = (currentPassiveSound - DistanceAvg);
-  float TemperatureInterval = (currentPassiveTemperature - TemperatureAvg);
-  float LightInterval = (currentPassiveLight - LightAvg);
-
-  Serial.println("Before passing!!!!");
-  Serial.println(passiveOutOfLevel[0]);
-  Serial.println(passiveOutOfLevel[1]);
+  if(currentPassiveSound > 250 ){passiveOutOfLevel[1] = 1;}
 }
 
 
@@ -478,7 +474,7 @@ bool lightArrangeCheck(float LightAvg){
 
 bool SoundArrangeCheck(float SoundAvg){
   bool arrangeCheck = true;
-  if( SoundAvg <= 10 || SoundAvg >=15000 ){
+  if( SoundAvg <= 10 || SoundAvg >=1500 ){
     arrangeCheck = false;
   }
   return arrangeCheck;

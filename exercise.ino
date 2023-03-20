@@ -9,6 +9,8 @@
 #define SOUND (A1)        // define the sound sensor to A1
 #define LIGHT (A3)
 
+
+rgb_lcd lcd;
 Ultrasonic ultrasonic(2);
 Grove_LED_Bar bar(7, 6, 0, LED_BAR_10);  // Clock pin, Data pin, Orientation
 float temp_C;                            // Variable used to store temperature
@@ -91,6 +93,42 @@ void loop() {
     if(check[0] & check[1] & check[2] & check[3]){
       Serial.println("Calibration Successful");
       //print in the LED bar to say 'calibration successful'
+      
+      int colorR = 255;
+      int colorG = 255;
+      int colorB = 255;
+
+      lcd.begin(16, 2);
+      lcd.setRGB(colorR, colorG, colorB);
+      // Print a message to the LCD.
+      lcd.print("Distance: ");
+      lcd.print(DistanceAvg);
+      delay(1000);
+      lcd.clear();
+      
+
+      lcd.print("Temperature: ");
+      lcd.print(TemperatureAvg);
+      delay(1000);
+      lcd.clear();
+
+
+      lcd.print("Light: ");
+      lcd.print(LightAvg);
+      delay(1000);
+      lcd.clear();
+
+
+      lcd.print("Sound: ");
+      lcd.print(SoundAvg);
+      delay(1000);
+      lcd.clear();
+
+
+      lcd.print("Calibration Successful");
+      delay(1000);
+
+
       intialCheck = 1;
     }else{
       Serial.println("Calibration Failure");

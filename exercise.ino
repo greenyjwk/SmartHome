@@ -18,8 +18,8 @@ float temp_F;                            // Variable used to store temperature
 
 // Lab6
 // passive mode : 0
-// passive mode : 1
-bool currentMode = 0;
+// active mode : 1
+int currentMode = 0;
 
 void setup() {
   // put your setup code here, to run once:
@@ -33,13 +33,20 @@ void setup() {
 
 long RangeInInches;
 long RangeInCentimeters;  // two measurements should keep an interval
-long temperatureArray[10];
-long soundArray[10];
-long lightArray[10];
-long distanceArray[10];
-int initStep = 1;
+long temperatureArray[10], soundArray[10], lightArray[10], distanceArray[10];
 float initStartTime = millis();
 int intialCheck = 0;
+
+float DistanceAvg;
+float TemperatureAvg;
+float LightAvg;
+float SoundAvg;
+
+float currentPassiveTemperature;
+float currentPassiveSound;
+float currentPassiveLight;
+
+
 
 void loop() {
 
@@ -70,10 +77,10 @@ void loop() {
       count++;
     }
 
-    float DistanceAvg = average(distanceArray);
-    float TemperatureAvg = average(temperatureArray);
-    float LightAvg = average(lightArray);
-    float SoundAvg = average(soundArray);
+    DistanceAvg = average(distanceArray);
+    TemperatureAvg = average(temperatureArray);
+    LightAvg = average(lightArray);
+    SoundAvg = average(soundArray);
 
     Serial.println("Final Average: ");
     Serial.println(DistanceAvg);
@@ -105,7 +112,7 @@ void loop() {
       lcd.print(DistanceAvg);
       delay(1000);
       lcd.clear();
-      
+
 
       lcd.print("Temperature: ");
       lcd.print(TemperatureAvg);
@@ -128,25 +135,72 @@ void loop() {
       lcd.print("Calibration Successful");
       delay(1000);
 
-
       intialCheck = 1;
-    }else{
+    }else{      
       Serial.println("Calibration Failure");
       //print in the LED bar to say 'calibration failure'
-    }
 
+      if(check[0] == true){
+        lcd.print("Distance: ");
+        lcd.print(DistanceAvg);
+      }
+
+      if(check[1] == true){
+        lcd.print("Temperature: ");
+        lcd.print(TemperatureAvg);
+      }
+
+      if(check[2] == true){
+        lcd.print("Light: ");
+        lcd.print(LightAvg);
+      }
+
+      if(check[3] == true){
+        lcd.print("Sound: ");
+        lcd.print(SoundAvg);
+      }
+      
+      lcd.print("Calibration failure");
+    }
   }
 
 
-  // if( millis() - initStartTime < 5000 ){
-  //   read_ultrasonic(2);
-  //   delay(1000);
-  //   read_Temperature(TEMP_SENSOR);
-  //   read_sound(SOUND);
-  //   read_Light(LIGHT);
-  //   initStep = 0;
-  // }
 
+  // currentMode = 1;
+
+  if(currentMode == 0){   // passive mode
+
+    bool* intervalsCheck = passiveModeMonitor();
+    lcd.println(currentPassiveTemperature);
+    lcd.println(currentPassiveSound);
+    lcd.println(currentPassiveLight);
+    delay(2000);
+
+  }else{                  // active mode
+
+    int colorR = 255;
+    int colorG = 0;
+    int colorB = 0;
+
+    lcd.begin(16, 2);
+    lcd.setRGB(colorR, colorG, colorB);
+
+    bool* intervalsCheck = activeModeMonitor();
+
+    if(intervalsCheck[0] == true){
+      lcd.print("Distance: ");
+    }
+
+    if(intervalsCheck[1] == true){
+      lcd.print("Temperature: ");
+    }
+
+    if(intervalsCheck[2] == true){
+      lcd.print("Light: ");
+    }
+    
+    lcd.print("Active Monitoring ");
+  }
 
   // Detecting Light
   // int analog_value = analogRead(LIGHT);
@@ -215,23 +269,81 @@ void loop() {
 }
 
 
-// float initial_collect(int initStartTime){
-//   float a, b, c, d;
-//   initStartTime = millis();
-//   while( millis() - initStartTime < 5000){
 
-//     a = read_Ultrasonic();
-//     b = read_Light(LIGHT);
-//     c = read_Temperature(TEMP_SENSOR);
-//     d = read_sound(SOUND);
-//     Serial.println(a);
-//     Serial.println(b);
-//     Serial.println(c);
-//     Serial.println(d);
-//     delay(500);
-//   }
-//   return a;
-// }
+bool* passiveModeMonitor(){
+  currentPassiveTemperature = read_Temperature(TEMP_SENSOR);
+  currentPassiveSound = read_sound(SOUND);
+  currentPassiveLight = read_Light(LIGHT);  
+  // delay(2000);
+
+  float SoundInterval = (currentPassiveSound - DistanceAvg);
+  float TemperatureInterval = (currentPassiveTemperature - TemperatureAvg);
+  float LightInterval = (currentPassiveLight - LightAvg);
+
+  bool intervals[3];
+
+  //check
+
+  // if(SoundInterval > 50){
+  //   intervals[0] = true;
+  // }else{
+  //   intervals[0] = false;    
+  // }
+
+  // if(TemperatureInterval > 10){
+  //   intervals[1] = true;
+  // }else{
+  //   intervals[1] = false;
+  // }
+
+  // if(LightInterval > 50){
+  //   intervals[2] = true;
+  // }else{
+  //   intervals[2] = false;
+  // }
+
+  return (bool*) &intervals;
+}
+
+
+
+
+
+bool* activeModeMonitor(){
+  float currentTemperature = read_Temperature(TEMP_SENSOR);
+  float currentUltrasonic = read_Ultrasonic();
+  float currentLight = read_Light(LIGHT);
+
+  float TemperatureInterval = (currentTemperature - TemperatureAvg);
+  float DistanceInterval = (currentUltrasonic - DistanceAvg);
+  float LightInterval = (currentLight - LightAvg);
+
+  bool intervals[3];
+
+  //check
+  
+
+  if(DistanceInterval > 50){
+    intervals[0] = true;
+  }else{
+    intervals[0] = false;    
+  }
+
+  if(TemperatureInterval > 10){
+    intervals[1] = true;
+  }else{
+    intervals[1] = false;
+  }
+
+  if(LightInterval > 50){
+    intervals[2] = true;
+  }else{
+    intervals[2] = false;
+  }
+
+  return (bool*) &intervals;
+}
+
 
 
 float average(float dataStream[]){

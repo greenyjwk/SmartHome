@@ -141,23 +141,27 @@ void loop() {
       //print in the LED bar to say 'calibration failure'
 
       if(check[0] == true){
-        lcd.print("Distance: ");
+        lcd.println("Distance: ");
         lcd.print(DistanceAvg);
+        lcd.clear();
       }
 
       if(check[1] == true){
-        lcd.print("Temperature: ");
+        lcd.println("Temperature: ");
         lcd.print(TemperatureAvg);
+        lcd.clear();
       }
 
       if(check[2] == true){
-        lcd.print("Light: ");
+        lcd.println("Light: ");
         lcd.print(LightAvg);
+        lcd.clear();
       }
 
       if(check[3] == true){
-        lcd.print("Sound: ");
+        lcd.println("Sound: ");
         lcd.print(SoundAvg);
+        lcd.clear();
       }
       
       lcd.print("Calibration failure");
@@ -171,10 +175,20 @@ void loop() {
   if(currentMode == 0){   // passive mode
 
     bool* intervalsCheck = passiveModeMonitor();
+    
     lcd.println(currentPassiveTemperature);
+    delay(1000);
+    lcd.clear();
+
     lcd.println(currentPassiveSound);
+    delay(1000);
+    lcd.clear();
+
     lcd.println(currentPassiveLight);
-    delay(2000);
+    delay(1000);
+    lcd.clear();
+
+    // delay(2000);
 
   }else{                  // active mode
 
@@ -274,7 +288,8 @@ bool* passiveModeMonitor(){
   currentPassiveTemperature = read_Temperature(TEMP_SENSOR);
   currentPassiveSound = read_sound(SOUND);
   currentPassiveLight = read_Light(LIGHT);  
-  // delay(2000);
+  delay(2000);
+
 
   float SoundInterval = (currentPassiveSound - DistanceAvg);
   float TemperatureInterval = (currentPassiveTemperature - TemperatureAvg);

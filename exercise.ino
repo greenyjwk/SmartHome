@@ -8,7 +8,8 @@
 #define TEMP_SENSOR (A0)  // Grove - Temperature Sensor connect to A0
 #define SOUND (A1)        // define the sound sensor to A1
 #define LIGHT (A3)
-
+#define RED_LED (3)
+#define BUZZER_PIN (5)            /* sig pin of the buzzer */
 
 rgb_lcd lcd;
 Ultrasonic ultrasonic(2);
@@ -28,6 +29,8 @@ void setup() {
   pinMode(7, INPUT_PULLUP);     // Touch sensor is attached to D7
   pinMode(TEMP_SENSOR, INPUT);  // Temperature: Configure pin A0 as an INPUT
   pinMode(LIGHT, INPUT);        // Light: Configure pin A3 as an INPUT
+  pinMode(RED_LED, OUTPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
   Serial.begin(9600);
 }
 
@@ -35,6 +38,7 @@ long RangeInInches;
 long RangeInCentimeters;  // two measurements should keep an interval
 float temperatureArray[10], soundArray[10], lightArray[10], distanceArray[10];
 int passiveOutOfLevel[2] = {0, 0};
+int activeOutOfLevel[3] = {0, 0, 0};
 float initStartTime = millis();
 int intialCheck = 0;
 
@@ -49,8 +53,8 @@ float currentPassiveLight;
 
 
 
-void loop() {
-
+void loop() { 
+  
   if (intialCheck == 0) {
     Serial.println("This is initial step");
     float initDatCollection[4];
@@ -175,8 +179,10 @@ void loop() {
     }
   }
 
+  currentMode = 1;
 
-  if(currentMode == 0){   // passive mode
+
+  if(currentMode == 0){   // passive monitoring
     int colorR = 255;
     int colorG = 255;
     int colorB = 255;
@@ -185,15 +191,15 @@ void loop() {
     
     passiveModeMonitor();
     
-    lcd.println(currentPassiveTemperature);
+    lcd.print(currentPassiveTemperature);
     delay(1000);
     lcd.clear();
 
-    lcd.println(currentPassiveSound);
+    lcd.print(currentPassiveSound);
     delay(1000);
     lcd.clear();
 
-    lcd.println(currentPassiveLight);
+    lcd.print(currentPassiveLight);
     delay(1000);
     lcd.clear();
 
@@ -243,35 +249,61 @@ void loop() {
     lcd.begin(16, 2);
     lcd.setRGB(colorR, colorG, colorB);
 
-    bool* intervalsCheck = activeModeMonitor();
+    activeModeMonitor();
+    if(activeOutOfLevel[0] == 1){
+      lcd.println("Intrustion!");
+      lcd.print("Distance");
+  
+      // Red LED Light  
+      digitalWrite(RED_LED, HIGH);  // Turn the pin ON / Set it HIGH = 1. 
+      delay(500);                  // Wait for 1 second = 1000 milliseconds.
+      digitalWrite(RED_LED, LOW);   // Turn the pin OFF / Set it LOW = 0.
 
-    if(intervalsCheck[0] == true){
-      lcd.print("Distance: ");
+
+      //Buzzer
+      digitalWrite(BUZZER_PIN, HIGH);
+      delay(500);
+      digitalWrite(BUZZER_PIN, LOW);
     }
 
-    if(intervalsCheck[1] == true){
-      lcd.print("Temperature: ");
+    if(activeOutOfLevel[1] == 1){
+      lcd.println("Intrustion!");
+      lcd.print("Temperature");
+      
+
+      // Red LED Light  
+      digitalWrite(RED_LED, HIGH);  // Turn the pin ON / Set it HIGH = 1. 
+      delay(500);                  // Wait for 1 second = 1000 milliseconds.
+      digitalWrite(RED_LED, LOW);   // Turn the pin OFF / Set it LOW = 0.
+
+      //Buzzer
+      digitalWrite(BUZZER_PIN, HIGH);
+      delay(500);
+      digitalWrite(BUZZER_PIN, LOW);
     }
 
-    if(intervalsCheck[2] == true){
-      lcd.print("Light: ");
+    if(activeOutOfLevel[2] == 1){
+      lcd.println("Intrustion!");
+      lcd.print("Light");
+        
+      // Red LED Light  
+      digitalWrite(RED_LED, HIGH);  // Turn the pin ON / Set it HIGH = 1. 
+      delay(500);                  // Wait for 1 second = 1000 milliseconds.
+      digitalWrite(RED_LED, LOW);   // Turn the pin OFF / Set it LOW = 0.
+
+      //Buzzer
+      digitalWrite(BUZZER_PIN, HIGH);
+      delay(500);
+      digitalWrite(BUZZER_PIN, LOW);
+      
     }
-    
-    lcd.print("Active Monitoring ");
+
+    activeOutOfLevel[0] = 0;
+    activeOutOfLevel[1] = 0;
+    activeOutOfLevel[2] = 0;
   }
 
-  // Detecting Light
-  // int analog_value = analogRead(LIGHT);
-  // int mapped_value = map(analog_value, 0, 800, 0, 10);
-  // Serial.println("sending command read light");
-  // Serial.print("Ambient light: ");
-  // Serial.println(mapped_value);
-  // delay(2000);
-
-
-
-
-
+  
   // /////////////////////////////////////////////////
   //   int startTime = millis();
   //   if(currentMode == 0){ //passive Mode
@@ -351,7 +383,7 @@ void passiveModeMonitor(){
 
 
 
-bool* activeModeMonitor(){
+void activeModeMonitor(){
   float currentTemperature = read_Temperature(TEMP_SENSOR);
   float currentUltrasonic = read_Ultrasonic();
   float currentLight = read_Light(LIGHT);
@@ -360,30 +392,18 @@ bool* activeModeMonitor(){
   float DistanceInterval = (currentUltrasonic - DistanceAvg);
   float LightInterval = (currentLight - LightAvg);
   
-  bool intervals[3];
-
   //check
-  
-
   if(DistanceInterval > 50){
-    intervals[0] = true;
-  }else{
-    intervals[0] = false;    
+    activeOutOfLevel[0] = 1;
   }
 
   if(TemperatureInterval > 10){
-    intervals[1] = true;
-  }else{
-    intervals[1] = false;
+    activeOutOfLevel[1] = 1;
   }
 
-  if(LightInterval > 50){
-    intervals[2] = true;
-  }else{
-    intervals[2] = false;
+  if(LightInterval > 200){
+    activeOutOfLevel[2] = 1;
   }
-
-  return (bool*) &intervals;
 }
 
 

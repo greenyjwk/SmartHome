@@ -1,16 +1,15 @@
-/* A program to vary the brightness of an LED */
+// Ji Woong Kim
 #include <rgb_lcd.h>
 #include <Grove_LED_Bar.h>
 #include <Servo.h>
 #include "Ultrasonic.h"
 
-// const int SOUND = A0; // define the sound sensor pin
 #define TEMP_SENSOR (A0)  // Grove - Temperature Sensor connect to A0
 #define SOUND (A1)        // define the sound sensor to A1
 #define LIGHT (A3)
 #define RED_LED (3)
-#define BUZZER_PIN (5)            /* sig pin of the buzzer */
 #define TouchPin (4)
+#define BUZZER_PIN (5)            /* sig pin of the buzzer */
 
 
 rgb_lcd lcd;
@@ -19,7 +18,6 @@ Grove_LED_Bar bar(7, 6, 0, LED_BAR_10);  // Clock pin, Data pin, Orientation
 float temp_C;                            // Variable used to store temperature
 float temp_F;                            // Variable used to store temperature
 
-// Lab6
 // passive mode : 0
 // active mode : 1
 int currentMode = 0;
@@ -34,7 +32,6 @@ void setup() {
   pinMode(RED_LED, OUTPUT);
   pinMode(BUZZER_PIN, OUTPUT);
   pinMode(TouchPin, INPUT);
-
   Serial.begin(9600);
 }
 
@@ -55,17 +52,10 @@ float currentPassiveSound;
 float currentPassiveLight;
 
 void loop() { 
-  
-
   if (intialCheck == 0) {
     Serial.println("This is initial step");
     float initDatCollection[4];
-    // initial_collect(initStartTime);
     float a, b, c, d;
-    // float distanceArray[10];
-    // float temperatureArray[10];
-    // float lightArray[10]; 
-    // float soundArray[10];
     
     initStartTime = millis();
     int count = 0;
@@ -83,7 +73,7 @@ void loop() {
       Serial.println(temperatureArray[count]);
       Serial.println(lightArray[count]);
       Serial.println(soundArray[count]);
-      Serial.println("-----Finished----");
+      Serial.println("-------------");
   
       delay(500);
       count++;
@@ -94,7 +84,7 @@ void loop() {
     LightAvg = average(lightArray);
     SoundAvg = average(soundArray);
 
-    Serial.println("Final Average:------- ");
+    Serial.println("-------Average------- ");
     Serial.println(DistanceAvg);
     Serial.println(TemperatureAvg);
     Serial.println(LightAvg);
@@ -104,10 +94,10 @@ void loop() {
 
     // bool rangeBoundCheck = average();
     bool check[4];
-    check[0] = distanceArrangeCheck(DistanceAvg);
-    check[1] = temperatureArrangeCheck(TemperatureAvg);
-    check[2] = lightArrangeCheck(LightAvg);
-    check[3] = SoundArrangeCheck(SoundAvg);
+    check[0] = distanceRangeCheck(DistanceAvg);
+    check[1] = temperatureRrangeCheck(TemperatureAvg);
+    check[2] = lightRangeCheck(LightAvg);
+    check[3] = SoundRangeCheck(SoundAvg);
 
   
     if(check[0] & check[1] & check[2] & check[3]){
@@ -189,7 +179,7 @@ void loop() {
 
 
     
-/////////// Changing Mode ///////////
+  /////////// Changing Mode ///////////
   int startTime = millis();
   if(currentMode == 0){ //passive Mode
     startTime = millis();
@@ -214,12 +204,9 @@ void loop() {
       }
     }
   }
-/////////// Changing Mode ///////////
+  /////////// Changing Mode ///////////
 
 
-
-
-  
   if(currentMode == 0){   // passive monitoring
     int colorR = 255;
     int colorG = 255;
@@ -240,13 +227,7 @@ void loop() {
     lcd.print(currentPassiveLight);
     delay(1000);
     lcd.clear();
-
-    
-
-    Serial.println("Alert Check----------");
-    Serial.println(passiveOutOfLevel[0]);
-    Serial.println(passiveOutOfLevel[1]);
-
+  
 
     if(passiveOutOfLevel[0] == 1){  // alert light
       int colorR = 255;
@@ -276,10 +257,7 @@ void loop() {
       passiveOutOfLevel[1] = 0;
     }
 
-    // delay(2000);
-
   }else{                  // active monitoring
-
     int colorR = 255;
     int colorG = 0;
     int colorB = 0;
@@ -296,7 +274,6 @@ void loop() {
       digitalWrite(RED_LED, HIGH);  // Turn the pin ON / Set it HIGH = 1. 
       delay(500);                  // Wait for 1 second = 1000 milliseconds.
       digitalWrite(RED_LED, LOW);   // Turn the pin OFF / Set it LOW = 0.
-
 
       //Buzzer
       digitalWrite(BUZZER_PIN, HIGH);
@@ -331,91 +308,36 @@ void loop() {
       //Buzzer
       digitalWrite(BUZZER_PIN, HIGH);
       delay(500);
-      digitalWrite(BUZZER_PIN, LOW);
-      
+      digitalWrite(BUZZER_PIN, LOW);      
     }
 
     activeOutOfLevel[0] = 0;
     activeOutOfLevel[1] = 0;
     activeOutOfLevel[2] = 0;
   }
-
-  
-
-
-
-
-
-  // /////////////////////////////////////////////////
-    // int startTime = millis();
-    // if(currentMode == 0){ //passive Mode
-    //   int startTime = 0;
-    //   int touchSensorDetection = digitalRead(7);
-    //   while(touchSensorDetection == 1){
-    //     Serial.println("Sensor is being pressed");
-    //     int currentTime = millis();
-    //     int interval = currentTime - startTime;
-    //     if(interval > 3000){
-    //       Serial.println("It's time to change the mode"); // prints time since program started
-    //       // Vibration Motor
-    //       digitalWrite(motorPin, HIGH); //vibrate
-    //       delay(1500);  // delay one second
-    //       digitalWrite(motorPin, LOW);  //stop vibrating
-    //       delay(1000); //wait 50 seconds.
-    //       currentMode = 1; // Changing to active mode
-    //       break;
-    //     }
-    //   }
-    //   currentMode = 1;  // Changing the mode
-
-    // }else if(currentMode == 1){
-    //   int touchSensorDetection = digitalRead(7);
-    //   Serial.println(touchSensorDetection);
-
-    //   while(touchSensorDetection == 1){
-    //     Serial.println("Sensor is being pressed");
-    //     int currentTime = millis();
-    //     int interval = currentTime - startTime;
-    //     if(interval > 2000){
-    //       Serial.println("It's time to change the mode"); // prints time since program started
-
-    //       digitalWrite(motorPin, HIGH); //vibrate
-    //       delay(500);  // delay one second
-
-    //       digitalWrite(motorPin, LOW);  //stop vibrating
-    //       delay(500); //wait 50 seconds.
-
-    //       digitalWrite(motorPin, HIGH); //vibrate
-    //       delay(500);  // delay one second
-
-    //       digitalWrite(motorPin, LOW);  //stop vibrating
-    //       delay(500); //wait 50 seconds.
-
-    //       currentMode = 0; // Changing to passive mode
-    //       break;
-    //     }
-    //   }
-    // }
-  // /////////////////////////////////////////////////
 }
 
 
-
+/*
+ * @brief:  It collects the temperature, sound and light sensor data in passive monitoring mode
+ * @param:  
+ * @ret:    
+ */
 void passiveModeMonitor(){
   currentPassiveTemperature = read_Temperature(TEMP_SENSOR);
   currentPassiveSound = read_sound(SOUND);
   currentPassiveLight = read_Light(LIGHT);  
   delay(2000);
-
-
   if(currentPassiveTemperature > 35.0 || currentPassiveTemperature < 10.0){passiveOutOfLevel[0] = 1;}
   if(currentPassiveSound > 250 ){passiveOutOfLevel[1] = 1;}
 }
 
 
-
-
-
+/*
+ * @brief:  It collects the temperature, sound and light sensor data in active monitoring mode
+ * @param:  
+ * @ret:    
+ */
 void activeModeMonitor(){
   float currentTemperature = read_Temperature(TEMP_SENSOR);
   float currentUltrasonic = read_Ultrasonic();
@@ -440,47 +362,76 @@ void activeModeMonitor(){
 }
 
 
-
+/*
+ * @brief:  Calculate the average of the collected sensor data
+ * @param:  Array of data that has been collected for first five seconds
+ * @ret:    Average for the first five seconds
+ */
 float average(float dataStream[]){
   long sum = 0L;
   for(int i = 0; i < 10; i++) {sum += dataStream[i];}
   return  ((float) sum) / 10;
 }
 
-
-bool distanceArrangeCheck(float DistanceAvg){
-  bool arrangeCheck = true;
+/*
+ * @brief:  Check whether the detected object is located at the distance that sensor can't detect
+ * @param:  Average distance of the ojbect from sensor for first five seconds
+ * @ret:    Result if the object is located at the distance that sensor can't detect
+ */
+bool distanceRangeCheck(float DistanceAvg){
+  bool rangeCheck = true;
   if(DistanceAvg >=232 ){
-    arrangeCheck = false;
+    rangeCheck = false;
   }
-  return arrangeCheck;
+  return rangeCheck;
 }
 
-bool temperatureArrangeCheck(float TemperatureAvg){
-  bool arrangeCheck = true;
+
+/*
+ * @brief:  Check whether the detected temperature is out of bound
+ * @param:  Average temperature that has been collected for first five seconds
+ * @ret:    Result if the temperature is out of bound or not
+ */
+bool temperatureRrangeCheck(float TemperatureAvg){
+  bool rangeCheck = true;
   if( TemperatureAvg <= -20 || TemperatureAvg >= 60 ){
-    arrangeCheck = false;
+    rangeCheck = false;
   }
-  return arrangeCheck;
+  return rangeCheck;
 }
 
-bool lightArrangeCheck(float LightAvg){
-  bool arrangeCheck = true;
+
+/*
+ * @brief:  Check whether the detected light is out of bound
+ * @param:  Average light that has been collected for first five seconds
+ * @ret:    Result if the light is out of bound or not
+ */
+bool lightRangeCheck(float LightAvg){
+  bool rangeCheck = true;
   if(LightAvg <= 1 || LightAvg >=1000 ){
-    arrangeCheck = false;
+    rangeCheck = false;
   }
-  return arrangeCheck;
+  return rangeCheck;
 }
 
-bool SoundArrangeCheck(float SoundAvg){
-  bool arrangeCheck = true;
+/*
+ * @brief:  Check whether the detected sound is out of bound
+ * @param:  Average Sound that has been collected for first five seconds
+ * @ret:    Result if the sound is out of bound or not
+ */
+bool SoundRangeCheck(float SoundAvg){
+  bool rangeCheck = true;
   if( SoundAvg <= 10 || SoundAvg >=1500 ){
-    arrangeCheck = false;
+    rangeCheck = false;
   }
-  return arrangeCheck;
+  return rangeCheck;
 }
 
-
+/*
+ * @brief:  Detects the object from the ultra sonic sensor and report the distance
+ * @param:  
+ * @ret:    The distance that object detected
+ */
 float read_Ultrasonic(){
   // RangeInInches = ultrasonic.MeasureInInches();
   RangeInCentimeters = ultrasonic.MeasureInCentimeters();  // two measurements should keep an interval
@@ -488,7 +439,6 @@ float read_Ultrasonic(){
   // Serial.println(RangeInCentimeters);
   return RangeInCentimeters;
 }
-
 
 
 /*
@@ -543,10 +493,3 @@ float read_Temperature(int pin) {
   float temperature = 1.0 / (log(R / R0) / B + 1 / 298.15) - 273.15;  // convert to temperature via datasheet
   return temperature;
 }
-
-
-float read_Temperature_farenheit(int temp_c) {
-  float temp_f = 1.8 * temp_c + 32;
-  return temp_f;
-}
-// Jiwoong Kim
